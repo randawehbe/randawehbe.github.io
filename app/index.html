@@ -40,7 +40,7 @@
   </style>
 </head>
 <body>
-  <!-- SPLASH SCREEN -->
+    <!-- SPLASH SCREEN -->
   <div id="splash">
     <div class="loader"></div>
     <p>Loading InstaScheduler…</p>
@@ -49,33 +49,27 @@
   <!-- FLUTTER BOOTSTRAP LOADER -->
   <script src="flutter_bootstrap.js" async></script>
 
-  <!-- HIDE SPLASH WHEN FLUTTER FIRST-RUNS A FRAME -->
+  <!-- SPLASH‐HIDE LOGIC -->
   <script>
-    window.addEventListener('flutter-first-frame', () => {
+    document.addEventListener('DOMContentLoaded', () => {
       const splash = document.getElementById('splash');
-      if (splash) splash.style.display = 'none';
+      // If we're on a hashed route (i.e. not the very first load), skip showing splash
+      if (window.location.hash && splash) {
+        splash.style.display = 'none';
+        return;
+      }
+
+      // Hide splash when Flutter paints its first frame
+      window.addEventListener('flutter-first-frame', () => {
+        if (splash) splash.style.display = 'none';
+      });
+
+      // Fallback: auto-hide after 15s in case first-frame never fires
+      setTimeout(() => {
+        if (splash) splash.style.display = 'none';
+      }, 15000);
     });
   </script>
 
-  <!-- SERVICE WORKER REGISTRATION & AUTO-RELOAD ON UPDATE -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/flutter_service_worker.js')
-          .then(reg => {
-            // when a new SW is found & activated, reload to get fresh content
-            reg.addEventListener('updatefound', () => {
-              const newSW = reg.installing;
-              newSW.addEventListener('statechange', () => {
-                if (newSW.state === 'activated') {
-                  window.location.reload();
-                }
-              });
-            });
-          })
-          .catch(err => console.error('SW registration failed:', err));
-      });
-    }
-  </script>
 </body>
 </html>
