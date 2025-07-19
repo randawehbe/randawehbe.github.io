@@ -3,73 +3,55 @@
 <head>
   <base href="/app/">
   <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
   <meta name="description" content="InstaScheduler Web App" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-  <meta name="apple-mobile-web-app-title" content="instascheduler" />
-  <link rel="apple-touch-icon" href="icons/Icon-192.png" />
-  <link rel="icon" type="image/png" href="favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="manifest" href="manifest.json" />
   <title>InstaScheduler</title>
   <style>
-    /* Simple full-screen splash */
-    #splash {
-      position: fixed;
-      inset: 0;
-      background: #ffffff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-family: sans-serif;
-      z-index: 9999;
-    }
-    #splash .loader {
-      border: 6px solid #f3f3f3;
-      border-top: 6px solid #4a90e2;
-      border-radius: 50%;
-      width: 48px;
-      height: 48px;
-      animation: spin 1s linear infinite;
-      margin-bottom: 16px;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    #splash { /* your spinner CSS here */ }
+    /* ... */
   </style>
 </head>
 <body>
-    <!-- SPLASH SCREEN -->
+  <!-- SPLASH -->
   <div id="splash">
     <div class="loader"></div>
     <p>Loading InstaScheduler…</p>
   </div>
 
-  <!-- FLUTTER BOOTSTRAP LOADER -->
-  <script src="flutter_bootstrap.js" async></script>
+  <!-- FLUTTER BOOTSTRAP -->
+  <script src="flutter.js" defer></script>
+  <script src="main.dart.js" type="application/javascript" defer></script>
 
-  <!-- SPLASH‐HIDE LOGIC -->
+  <!-- HIDE SPLASH WHEN FLUTTER FIRST FRAME FIRES -->
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const splash = document.getElementById('splash');
-      // If we're on a hashed route (i.e. not the very first load), skip showing splash
-      if (window.location.hash && splash) {
-        splash.style.display = 'none';
-        return;
-      }
-
-      // Hide splash when Flutter paints its first frame
-      window.addEventListener('flutter-first-frame', () => {
-        if (splash) splash.style.display = 'none';
-      });
-
-      // Fallback: auto-hide after 15s in case first-frame never fires
-      setTimeout(() => {
-        if (splash) splash.style.display = 'none';
-      }, 15000);
+    window.addEventListener('flutter-first-frame', () => {
+      document.getElementById('splash')?.style.display = 'none';
     });
+    // fallback in case of error
+    setTimeout(() => {
+      document.getElementById('splash')?.style.display = 'none';
+    }, 15000);
   </script>
 
+  <!-- SERVICE WORKER -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/app/flutter_service_worker.js')
+          .then(reg => {
+            reg.addEventListener('updatefound', () => {
+              const newSW = reg.installing;
+              newSW.addEventListener('statechange', () => {
+                if (newSW.state === 'activated') {
+                  window.location.reload();
+                }
+              });
+            });
+          })
+          .catch(e => console.error('SW register failed:', e));
+      });
+    }
+  </script>
 </body>
 </html>
