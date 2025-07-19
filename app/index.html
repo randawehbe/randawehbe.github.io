@@ -1,45 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <base href="/app/">
   <meta charset="UTF-8" />
-  <meta name="description" content="InstaScheduler Web App" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="manifest" href="manifest.json" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>InstaScheduler</title>
+  <base href="/app/" />
+
+  <!-- PWA manifest & favicon -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+
+  <!-- SPLASH SCREEN STYLES -->
   <style>
-    #splash { /* your spinner CSS here */ }
-    /* ... */
+    #splash {
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      font-family: sans-serif;
+    }
+    #splash .loader {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #4a90e2;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 12px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
-  <!-- SPLASH -->
+  <!-- SPLASH SCREEN -->
   <div id="splash">
     <div class="loader"></div>
-    <p>Loading InstaScheduler…</p>
+    <div>Loading InstaScheduler…</div>
   </div>
 
-  <!-- FLUTTER BOOTSTRAP -->
+  <!-- FLUTTER WEB LOADER -->
   <script src="flutter.js" defer></script>
-  <script src="main.dart.js" type="application/javascript" defer></script>
+  <script src="main.dart.js" defer></script>
 
-  <!-- HIDE SPLASH WHEN FLUTTER FIRST FRAME FIRES -->
+  <!-- HIDE SPLASH WHEN FLUTTER RENDERS FIRST FRAME -->
   <script>
+    // Remove the splash as soon as Flutter draws the first frame
     window.addEventListener('flutter-first-frame', () => {
-      document.getElementById('splash')?.style.display = 'none';
+      const splash = document.getElementById('splash');
+      if (splash) splash.style.display = 'none';
     });
-    // fallback in case of error
+    // Safety fallback: hide after 15 seconds in case of loader issues
     setTimeout(() => {
-      document.getElementById('splash')?.style.display = 'none';
+      const splash = document.getElementById('splash');
+      if (splash) splash.style.display = 'none';
     }, 15000);
   </script>
 
-  <!-- SERVICE WORKER -->
+  <!-- SERVICE WORKER REGISTRATION & AUTO-RELOAD ON UPDATE -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/app/flutter_service_worker.js')
           .then(reg => {
+            // when a new SW activates, reload to get the fresh app
             reg.addEventListener('updatefound', () => {
               const newSW = reg.installing;
               newSW.addEventListener('statechange', () => {
@@ -49,7 +79,7 @@
               });
             });
           })
-          .catch(e => console.error('SW register failed:', e));
+          .catch(err => console.error('SW registration failed:', err));
       });
     }
   </script>
