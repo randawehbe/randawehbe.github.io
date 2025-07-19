@@ -1,38 +1,78 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
+  <meta charset="UTF-8"/>
+  <title>InstaScheduler</title>
+  <base href="/app/"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="icon" href="favicon.png"/>
 
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
-  <base href="/app/">
-
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
-
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="instascheduler">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>instascheduler</title>
-  <link rel="manifest" href="manifest.json">
+  <!-- SPLASH / LOADING SPINNER STYLES -->
+  <style>
+    #splash {
+      position: fixed;
+      inset: 0;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      font-family: sans-serif;
+    }
+    #splash .loader {
+      width: 48px;
+      height: 48px;
+      border: 6px solid #eee;
+      border-top-color: #567;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
 <body>
-  <script src="flutter_bootstrap.js" async></script>
+  <!-- 1) SHOW THIS SPINNER IMMEDIATELY -->
+  <div id="splash">
+    <div class="loader"></div>
+    <div>Loading InstaScheduler…</div>
+  </div>
+
+  <!-- 2) FLUTTER WEB BOOTSTRAP -->
+  <script src="flutter.js" defer></script>
+  <script src="main.dart.js" defer></script>
+
+  <!-- 3) HIDE SPLASH WHEN FLUTTER DRAWS ITS FIRST FRAME -->
+  <script>
+    window.addEventListener('flutter-first-frame', () => {
+      const s = document.getElementById('splash');
+      if (s) s.style.display = 'none';
+    });
+    // Fallback: if something goes wrong, hide after 15s
+    setTimeout(() => {
+      const s = document.getElementById('splash');
+      if (s) s.style.display = 'none';
+    }, 15000);
+  </script>
+
+  <!-- 4) SERVICE WORKER REGISTER & AUTO-RELOAD -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () =>
+        navigator.serviceWorker.register('/app/flutter_service_worker.js')
+          .then(reg => {
+            reg.addEventListener('updatefound', () => {
+              const newSW = reg.installing;
+              newSW.addEventListener('statechange', () => {
+                if (newSW.state === 'activated') window.location.reload();
+              });
+            });
+          })
+          .catch(console.error)
+      );
+    }
+  </script>
 </body>
 </html>
